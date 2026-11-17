@@ -1,3 +1,9 @@
+databases:
+  - name: openease-db
+    databaseName: openease
+    user: openease_user
+    plan: free
+
 services:
   - type: web
     name: openease
@@ -11,6 +17,8 @@ services:
       - key: PORT
         value: 3000
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: openease-db
+          property: connectionString
       - key: SESSION_SECRET
         generateValue: true
