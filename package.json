@@ -20,7 +20,7 @@
     "open-house",
     "event-management",
     "express",
-    "mongodb"
+    "postgresql"
   ],
   "license": "MIT",
   "dependencies": {
