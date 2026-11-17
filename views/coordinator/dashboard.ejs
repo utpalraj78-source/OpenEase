@@ -1,0 +1,69 @@
+<%- include('../partials/header') %>
+
+<div class="page-head">
+  <div>
+    <h1>Dashboard</h1>
+    <p class="muted"><%= currentUser.department || 'Coordinator' %></p>
+  </div>
+  <a href="/coordinator/events/new" class="btn">+ Create event</a>
+</div>
+
+<%
+  var booked = Object.keys(countMap).reduce(function (t, k) { return t + countMap[k]; }, 0);
+  var pub = events.filter(function (e) { return e.status === 'PUBLISHED'; }).length;
+  var waiting = events.filter(function (e) { return ['SUBMITTED', 'UNDER_REVIEW'].indexOf(e.status) !== -1; }).length;
+%>
+<div class="stat-cards">
+  <div class="stat"><div><small>Total events</small><strong><%= events.length %></strong></div></div>
+  <div class="stat stat-green"><div><small>Published</small><strong><%= pub %></strong></div></div>
+  <div class="stat stat-amber"><div><small>Waiting for approval</small><strong><%= waiting %></strong></div></div>
+  <div class="stat"><div><small>Registrations</small><strong><%= booked %></strong></div></div>
+</div>
+
+<%
+  var groups = [
+    { name: 'Needs your action', match: ['DRAFT', 'REVISION_REQUIRED', 'APPROVED'] },
+    { name: 'Waiting for approval', match: ['SUBMITTED', 'UNDER_REVIEW'] },
+    { name: 'Published', match: ['PUBLISHED'] },
+    { name: 'Closed', match: ['REJECTED', 'CANCELLED'] }
+  ];
+%>
+
+<% if (!events.length) { %>
+  <div class="empty">
+    <p>You haven't created any events yet.</p>
+    <a href="/coordinator/events/new" class="btn">Create your first open house</a>
+  </div>
+<% } %>
+
+<% groups.forEach(function (g) {
+     var list = events.filter(function (e) { return g.match.indexOf(e.status) !== -1; });
+     if (!list.length) return; %>
+  <h2 class="section-title"><%= g.name %> <span class="muted">(<%= list.length %>)</span></h2>
+  <table class="table">
+    <thead>
+      <tr><th>ID</th><th>Title</th><th>Date</th><th>Venue</th><th>Registered</th><th>Status</th><th></th></tr>
+    </thead>
+    <tbody>
+      <% list.forEach(function (e) { var n = countMap[String(e._id)] || 0; %>
+        <tr>
+          <td><code><%= e.eventId %></code></td>
+          <td><a href="/coordinator/events/<%= e._id %>"><%= e.title %></a></td>
+          <td class="nowrap"><%= e.schedule.eventDate ? h.fmtDate(e.schedule.eventDate) : '-' %></td>
+          <td><%= e.venue ? e.venue.label : '-' %></td>
+          <td><%= e.status === 'PUBLISHED' || e.status === 'CANCELLED' ? n + ' / ' + e.totalMaxCapacity : '-' %></td>
+          <td><%- include('../partials/status', { status: e.status }) %></td>
+          <td class="nowrap">
+            <% if (['DRAFT', 'REVISION_REQUIRED'].indexOf(e.status) !== -1) { %>
+              <a href="/coordinator/events/<%= e._id %>/edit">Edit</a>
+            <% } else { %>
+              <a href="/coordinator/events/<%= e._id %>">Open</a>
+            <% } %>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+<% }) %>
+
+<%- include('../partials/footer') %>

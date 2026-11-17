@@ -1,0 +1,155 @@
+<%- include('../partials/header') %>
+<%
+  // re-posted form after an error, otherwise prefill from the account
+  var f = form || {};
+  var u = currentUser;
+  function val(k, d) { return f[k] !== undefined ? f[k] : (d || ''); }
+  var visitor = val('participantType', u.participantType);
+%>
+
+<p class="crumbs"><a href="/events">Open Houses</a> / Registration</p>
+
+<div class="page-head">
+  <div>
+    <h1 class="mb-1">Register for Open House</h1>
+    <p class="muted">Explore our campus, meet faculty, and discover academic programs.</p>
+  </div>
+</div>
+
+<% if (error) { %>
+  <div class="flash flash-error">
+    <%= error %>
+    <% if (errorList && errorList.length > 1) { %>
+      <ul><% errorList.slice(1).forEach(function (m) { %><li><%= m %></li><% }) %></ul>
+    <% } %>
+    <br><span class="small">Your registration needs correction. Fix it and submit again.</span>
+  </div>
+<% } %>
+
+<% if (!eligible) { %>
+  <div class="flash flash-info">
+    This event is for <strong><%= C.ELIGIBILITY[event.eligibilityCriteria.criteriaId] %></strong>, and your profile says
+    <strong><%= C.LEVEL_LABELS[u.eligibilityStatus] %></strong>. You won't be able to register unless that's wrong.
+  </div>
+<% } %>
+
+<form method="post" action="/events/<%= event._id %>/register" class="register-form" id="registerForm">
+<div class="reg-layout">
+  <div>
+    <div class="card event-head-card">
+      <div class="ehc-top">
+        <div>
+          <h2 class="mb-0"><%= event.title %> <span class="chip-open"><%= event.registrationState() === 'Registration open' ? 'Open for Registration' : event.registrationState() %></span></h2>
+          <p class="muted small"><%= event.organizer || '' %></p>
+        </div>
+        <span class="muted small">Event ID: <%= event.eventId %></span>
+      </div>
+      <div class="ehc-facts">
+        <div><span class="lbl">Date</span><%= h.fmtDate(event.schedule.eventDate) %></div>
+        <div><span class="lbl">Event timings</span><%= h.fmtTime(event.schedule.startTime) %> - <%= h.fmtTime(event.schedule.endTime) %></div>
+        <div><span class="lbl">Campus location</span><%= event.venue ? event.venue.roomNumber : '-' %></div>
+        <div><span class="lbl">Meeting point</span><%= event.venue ? event.venue.buildingName : '-' %></div>
+      </div>
+      <p class="small ehc-desc"><%= (event.description || '').split('\n')[0] %></p>
+      <p class="small muted countdown" data-deadline="<%= new Date(event.registrationPeriod.registrationEnd).toISOString() %>">
+        Registration closes <%= h.fmtDateTime(event.registrationPeriod.registrationEnd) %> <span class="js-countdown"></span>
+      </p>
+    </div>
+
+    <div class="card">
+      <h2 class="mb-0">1. Select a session</h2>
+      <p class="muted small">Choose one session to include in your registration.</p>
+      <table class="session-pick" id="sessionPick">
+        <thead><tr><th></th><th>Session name</th><th>Time</th><th>Location</th><th class="right">Available seats</th></tr></thead>
+        <tbody>
+          <% sessions.forEach(function (s) { var left = s.allocatedCapacity - s.bookedSeats; var full = left <= 0; %>
+            <tr class="<%= full ? 'is-full' : '' %>">
+              <td><input type="radio" name="sessionId" value="<%= s._id %>" id="s-<%= s._id %>" <%= full ? 'disabled' : '' %> <%= String(f.sessionId) === String(s._id) ? 'checked' : '' %> required
+                  data-title="<%= s.sessionTitle %>" data-time="<%= h.fmtTime(s.startTime) %> - <%= h.fmtTime(s.endTime) %>" data-venue="<%= s.venue ? s.venue.label : '' %>"></td>
+              <td><label for="s-<%= s._id %>"><%= s.sessionTitle %></label></td>
+              <td class="nowrap"><%= h.fmtTime(s.startTime) %> - <%= h.fmtTime(s.endTime) %></td>
+              <td><%= s.venue ? s.venue.roomNumber : '' %></td>
+              <td class="right"><% if (full) { %><span class="pill-full">Full</span><% } else { %><span class="<%= left <= 10 ? 'seats-low' : '' %>"><%= left %> seats</span><% } %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2 class="mb-0">2. Participant details</h2>
+      <p class="muted small">Fields marked with * are required.</p>
+      <div class="grid-2">
+        <label>Full Name <span class="req">*</span>
+          <input name="fullName" value="<%= val('fullName', u.fullName) %>" placeholder="Enter full name" required>
+        </label>
+        <label>Email Address <span class="req">*</span>
+          <input type="email" name="email" value="<%= val('email', u.email) %>" placeholder="name@example.com" required>
+        </label>
+        <label>Contact Number <span class="req">*</span>
+          <input name="contactPhone" value="<%= val('contactPhone', u.contactPhone) %>" inputmode="numeric" maxlength="10" placeholder="10 digit mobile" required>
+        </label>
+        <label>Visitor Type <span class="req">*</span>
+          <select name="participantType" id="visitorType">
+            <option value="STUDENT" <%= visitor === 'STUDENT' ? 'selected' : '' %>>Prospective Student</option>
+            <option value="PARENT" <%= visitor === 'PARENT' ? 'selected' : '' %>>Parent</option>
+          </select>
+        </label>
+        <label>Current School/Institution <span class="muted">(optional)</span>
+          <input name="currentInstitution" value="<%= val('currentInstitution', u.currentInstitution) %>" placeholder="Enter school or institution">
+        </label>
+        <label>Intended Academic Program <span class="muted">(optional)</span>
+          <select name="intendedProgram">
+            <option value="">Select a program</option>
+            <% programs.forEach(function (p) { %><option <%= val('intendedProgram') === p ? 'selected' : '' %>><%= p %></option><% }) %>
+          </select>
+        </label>
+        <label>People coming with you
+          <select name="guests">
+            <% [0, 1, 2].forEach(function (n) { %>
+              <option value="<%= n %>" <%= String(val('guests', '0')) === String(n) ? 'selected' : '' %>><%= n === 0 ? 'Just me' : '+' + n %></option>
+            <% }) %>
+          </select>
+          <span class="hint">Family members with you don't need their own seat.</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <aside>
+    <div class="card reg-summary">
+      <h3>Registration summary</h3>
+      <dl>
+        <dt>Event</dt><dd><%= event.title %></dd>
+        <dt>Session</dt><dd id="sumSession">Not selected</dd>
+        <div class="two">
+          <div><dt>Date</dt><dd><%= h.fmtDate(event.schedule.eventDate) %></dd></div>
+          <div><dt>Time</dt><dd id="sumTime">-</dd></div>
+        </div>
+        <dt>Location</dt><dd id="sumVenue"><%= event.venue ? event.venue.label : '-' %></dd>
+        <dt>Visitor type</dt><dd id="sumVisitor"><%= visitor === 'PARENT' ? 'Parent' : 'Prospective Student' %></dd>
+      </dl>
+    </div>
+    <div class="card consent-card">
+      <h3>3. Consent</h3>
+      <label class="check">
+        <input type="checkbox" name="eligibilityConfirmed" <%= f.eligibilityConfirmed ? 'checked' : '' %>>
+        I confirm that the information provided is accurate and complete, and that I meet the eligibility criteria (<%= C.ELIGIBILITY[event.eligibilityCriteria.criteriaId] %>).
+      </label>
+      <label class="check">
+        <input type="checkbox" name="termsAccepted" <%= f.termsAccepted ? 'checked' : '' %>>
+        I agree to the registration terms and event attendance guidelines.
+      </label>
+    </div>
+  </aside>
+</div>
+
+<div class="reg-actions">
+  <a href="/events/<%= event._id %>" class="btn btn-ghost">Back to Event Details</a>
+  <span class="spacer"></span>
+  <a href="/events" class="linkbtn">Cancel</a>
+  <button type="submit" class="btn btn-blue" <%= eligible ? '' : 'disabled' %>>Complete Registration</button>
+</div>
+</form>
+
+<%- include('../partials/footer') %>

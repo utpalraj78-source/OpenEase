@@ -1,0 +1,41 @@
+<%- include('../partials/header') %>
+
+<div class="page-head">
+  <div>
+    <h1>Registration &amp; attendance report</h1>
+    <p class="muted"><%= currentUser.role === 'COORDINATOR' ? 'Your published events' : 'All published events' %></p>
+  </div>
+  <button class="btn btn-ghost btn-sm" onclick="window.print()">Print</button>
+</div>
+
+<div class="metrics">
+  <div><span><%= rows.length %></span>Events</div>
+  <div><span><%= totals.confirmed %></span>Confirmed registrations</div>
+  <div class="m-present"><span><%= totals.present %></span>Marked present</div>
+  <div class="m-absent"><span><%= totals.cancelled %></span>Cancellations</div>
+</div>
+
+<% if (!rows.length) { %>
+  <div class="empty"><p>No published events yet.</p></div>
+<% } else { %>
+  <table class="table">
+    <thead>
+      <tr><th>Event</th><th>Date</th><th>Registered</th><th>Seats filled</th><th>Present</th><th>Attendance</th><th></th></tr>
+    </thead>
+    <tbody>
+      <% rows.forEach(function (r) { %>
+        <tr class="<%= r.event.status === 'CANCELLED' ? 'dim' : '' %>">
+          <td><%= r.event.title %><br><span class="muted small"><%= r.event.eventId %><%= r.event.status === 'CANCELLED' ? ' · cancelled' : '' %></span></td>
+          <td class="nowrap"><%= h.fmtDate(r.event.schedule.eventDate) %></td>
+          <td><%= r.confirmed %> / <%= r.event.totalMaxCapacity %></td>
+          <td><div class="bar"><span style="width: <%= r.fillRate %>%"></span></div><span class="small"><%= r.fillRate %>%</span></td>
+          <td><%= r.present %></td>
+          <td><div class="bar bar-green"><span style="width: <%= r.attendanceRate %>%"></span></div><span class="small"><%= r.event.hasEnded() || r.present ? r.attendanceRate + '%' : 'not yet' %></span></td>
+          <td><a href="/reports/events/<%= r.event._id %>">Details</a></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+<% } %>
+
+<%- include('../partials/footer') %>

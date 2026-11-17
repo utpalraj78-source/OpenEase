@@ -1,0 +1,98 @@
+<%- include('../partials/header') %>
+
+<p class="crumbs"><a href="/coordinator">My events</a> / <%= event.eventId %></p>
+
+<div class="page-head">
+  <div>
+    <h1 class="mb-1"><%= event.title %></h1>
+    <p class="meta"><%= event.schedule.eventDate ? h.fmtDate(event.schedule.eventDate) : 'No date yet' %> &middot; <%= h.fmtTime(event.schedule.startTime) %> - <%= h.fmtTime(event.schedule.endTime) %> &middot; <%= event.venue ? event.venue.label : 'No venue' %></p>
+  </div>
+  <%- include('../partials/status', { status: event.status }) %>
+</div>
+
+<div class="toolbar">
+  <% if (canEdit) { %><a class="btn btn-ghost btn-sm" href="/coordinator/events/<%= event._id %>/edit">Edit</a><% } %>
+  <% if (event.status === 'APPROVED') { %>
+    <form method="post" action="/coordinator/events/<%= event._id %>/publish" class="inline">
+      <button class="btn btn-sm">Publish event</button>
+    </form>
+  <% } %>
+  <% if (event.status === 'PUBLISHED') { %>
+    <a class="btn btn-ghost btn-sm" href="/events/<%= event._id %>">View public page</a>
+    <form method="post" action="/coordinator/events/<%= event._id %>/remind" class="inline">
+      <button class="btn btn-ghost btn-sm">Send reminder</button>
+    </form>
+    <a class="btn btn-ghost btn-sm" href="/coordinator/events/<%= event._id %>/participants.csv">Download participants (CSV)</a>
+    <a class="btn btn-ghost btn-sm" href="/reports/events/<%= event._id %>">Report</a>
+  <% } %>
+</div>
+
+<% if (event.reviews && event.reviews.length) { %>
+  <% var last = event.reviews[event.reviews.length - 1]; %>
+  <% if (last.comments) { %>
+    <div class="note"><strong><%= last.reviewer ? last.reviewer.fullName : 'Approver' %>:</strong> <%= last.comments %></div>
+  <% } %>
+<% } %>
+
+<h2 class="section-title">Sessions</h2>
+<table class="table">
+  <thead><tr><th>ID</th><th>Time</th><th>Session</th><th>Room</th><th>Booked</th><th>Attendance</th></tr></thead>
+  <tbody>
+    <% if (!sessions.length) { %><tr><td colspan="6" class="muted">No sessions added yet.</td></tr><% } %>
+    <% sessions.forEach(function (s) { %>
+      <tr>
+        <td><code><%= s.sessionId %></code></td>
+        <td class="nowrap"><%= h.fmtTime(s.startTime) %> - <%= h.fmtTime(s.endTime) %></td>
+        <td><%= s.sessionTitle %></td>
+        <td><%= s.venue ? s.venue.label : '' %></td>
+        <td>
+          <div class="bar"><span style="width: <%= Math.min(100, Math.round(s.bookedSeats / s.allocatedCapacity * 100)) %>%"></span></div>
+          <span class="small"><%= s.bookedSeats %> / <%= s.allocatedCapacity %></span>
+        </td>
+        <td>
+          <% if (event.status === 'PUBLISHED') { %>
+            <a href="/coordinator/sessions/<%= s._id %>/attendance">Take attendance</a>
+          <% } else { %><span class="muted small">after publishing</span><% } %>
+        </td>
+      </tr>
+    <% }) %>
+  </tbody>
+</table>
+
+<% if (event.status === 'PUBLISHED' || event.status === 'CANCELLED') { %>
+  <h2 class="section-title">Registrations <span class="muted">(<%= registrations.filter(function (r) { return r.status === 'REGISTERED'; }).length %> confirmed)</span></h2>
+  <% if (!registrations.length) { %>
+    <p class="muted">No one has registered yet.</p>
+  <% } else { %>
+    <table class="table">
+      <thead><tr><th>Booking ID</th><th>Name</th><th>Type</th><th>Contact</th><th>Session</th><th>When</th><th>Status</th></tr></thead>
+      <tbody>
+        <% registrations.forEach(function (r) { %>
+          <tr class="<%= r.status === 'CANCELLED' ? 'dim' : '' %>">
+            <td><code><%= r.registrationId %></code></td>
+            <td><%= r.fullName || '-' %></td>
+            <td><%= r.participantType === 'PARENT' ? 'Parent' : 'Student' %><%= r.guests ? ' +' + r.guests : '' %></td>
+            <td class="small"><%= r.email || '' %><br><%= r.contactPhone || '' %></td>
+            <td><%= r.session ? r.session.sessionTitle : '' %></td>
+            <td class="small nowrap"><%= h.fmtDateTime(r.registrationTimestamp) %></td>
+            <td><%- include('../partials/status', { status: r.status }) %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } %>
+<% } %>
+
+<% if (C.CANCELLABLE_STATUSES.indexOf(event.status) !== -1 && !event.hasEnded()) { %>
+  <details class="card danger-zone">
+    <summary>Cancel this event</summary>
+    <form method="post" action="/coordinator/events/<%= event._id %>/cancel" class="form" data-confirm="Cancel the event? All registrations will be cancelled and participants notified.">
+      <label>Reason <span class="req">*</span>
+        <input name="reason" required maxlength="200">
+      </label>
+      <button class="btn btn-danger btn-sm">Cancel event</button>
+    </form>
+  </details>
+<% } %>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,80 @@
+<%- include('../partials/header') %>
+
+<p class="crumbs"><a href="/events">Events</a> / <%= event.eventId %></p>
+
+<% if (event.status === 'CANCELLED') { %>
+  <div class="flash flash-error">This event has been cancelled. <%= event.cancelReason ? 'Reason: ' + event.cancelReason : '' %></div>
+<% } else if (event.status !== 'PUBLISHED') { %>
+  <div class="flash flash-info">Staff preview - this event is <%= h.statusLabel(event.status).toLowerCase() %> and not visible to students yet.</div>
+<% } %>
+
+<div class="detail-layout">
+  <div>
+    <h1 class="mb-1"><%= event.title %></h1>
+    <p class="meta">
+      <% if (event.category) { %><span class="tag"><%= event.category.categoryName %></span><% } %>
+      <span class="tag tag-light"><%= C.ELIGIBILITY[event.eligibilityCriteria.criteriaId] %></span>
+    </p>
+
+    <div class="prose"><%= event.description %></div>
+
+    <h2 class="section-title">Sessions</h2>
+    <p class="muted small">You pick one session while registering.</p>
+    <table class="table">
+      <thead><tr><th>Time</th><th>Session</th><th>Venue</th><th>Availability</th></tr></thead>
+      <tbody>
+        <% sessions.forEach(function (s) { var left = s.allocatedCapacity - s.bookedSeats; %>
+          <tr>
+            <td class="nowrap"><%= h.fmtTime(s.startTime) %> - <%= h.fmtTime(s.endTime) %></td>
+            <td><strong><%= s.sessionTitle %></strong><% if (s.speaker) { %><br><span class="muted small"><%= s.speaker %></span><% } %></td>
+            <td><%= s.venue ? s.venue.label : '' %></td>
+            <td><% if (left > 0) { %><span class="seats"><%= left %> left</span><% } else { %><span class="badge badge-cancelled">Full</span><% } %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+
+    <% if (event.eligibilityCriteria.description) { %>
+      <h2 class="section-title">Before you come</h2>
+      <div class="note"><%= event.eligibilityCriteria.description %></div>
+    <% } %>
+  </div>
+
+  <aside class="card sidebar">
+    <dl class="facts">
+      <dt>Date</dt><dd><%= h.fmtDate(event.schedule.eventDate) %></dd>
+      <dt>Time</dt><dd><%= h.fmtTime(event.schedule.startTime) %> - <%= h.fmtTime(event.schedule.endTime) %></dd>
+      <dt>Main venue</dt><dd><%= event.venue ? event.venue.label : '-' %><% if (event.venue && event.venue.buildingName) { %><br><span class="muted small"><%= event.venue.buildingName %></span><% } %></dd>
+      <dt>Organised by</dt><dd><%= event.organizer || '-' %></dd>
+      <dt>Registration</dt>
+      <dd><%= h.fmtDateTime(event.registrationPeriod.registrationStart) %><br>to <%= h.fmtDateTime(event.registrationPeriod.registrationEnd) %></dd>
+      <dt>Seats</dt><dd><%= Math.max(0, event.totalMaxCapacity - confirmed) %> of <%= event.totalMaxCapacity %> left</dd>
+    </dl>
+
+    <% var state = event.registrationState(); %>
+    <p class="state-line"><%= state %></p>
+
+    <div class="mb-3" style="display:flex; flex-direction:column; gap:0.5rem;">
+      <a href="/events/<%= event._id %>/calendar.ics" class="btn btn-ghost btn-sm btn-block">📅 Add to Calendar (.ics)</a>
+      <a href="/media/maps/campus-venue-map.svg" target="_blank" class="btn btn-ghost btn-sm btn-block">🗺️ View Campus Map</a>
+    </div>
+
+    <% if (myReg) { %>
+      <div class="flash flash-success">You're registered (<%= myReg.registrationId %>) for <strong><%= myReg.session.sessionTitle %></strong>.</div>
+      <a href="/my/registrations/<%= myReg._id %>" class="btn btn-block btn-ghost">View my booking</a>
+    <% } else if (event.status === 'PUBLISHED' && state === 'Registration open') { %>
+      <% if (!currentUser) { %>
+        <a href="/login" class="btn btn-block">Log in to register</a>
+        <p class="small center-text">No account? <a href="/register">Sign up</a></p>
+      <% } else if (currentUser.role === 'STUDENT_PARENT') { %>
+        <% if (confirmed >= event.totalMaxCapacity) { %>
+          <button class="btn btn-block" disabled>Fully booked</button>
+        <% } else { %>
+          <a href="/events/<%= event._id %>/register" class="btn btn-block">Register for this event</a>
+        <% } %>
+      <% } %>
+    <% } %>
+  </aside>
+</div>
+
+<%- include('../partials/footer') %>

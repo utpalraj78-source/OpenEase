@@ -1,0 +1,51 @@
+<%- include('../partials/header') %>
+
+<p class="crumbs"><a href="/admin/users">Administration</a> / External Subsystems &amp; Syslog</p>
+
+<div class="page-head">
+  <div>
+    <h1 class="mb-1">Central Syslog Daemon &amp; Directory Status</h1>
+    <p class="muted">Architecture Context Diagram (Figure 50.1) Peer &amp; Subordinate System Monitor</p>
+  </div>
+  <a href="/admin/users" class="btn btn-ghost btn-sm">&larr; Back to Users</a>
+</div>
+
+<div class="grid-2 mb-4">
+  <div class="card">
+    <h2 class="section-title">Institutional LDAP Directory (Subordinate System)</h2>
+    <dl class="facts">
+      <dt>Directory Host</dt><dd><code><%= ldapStatus.host %>:<%= ldapStatus.port %></code></dd>
+      <dt>Base DN</dt><dd><code><%= ldapStatus.baseDn %></code></dd>
+      <dt>Bind DN</dt><dd><code><%= ldapStatus.bindDn %></code></dd>
+      <dt>Connection Status</dt><dd><span class="tag tag-present"><%= ldapStatus.status %></span></dd>
+      <dt>Directory Sync</dt><dd><%= h.fmtDateTime(ldapStatus.lastSynchronized) %></dd>
+    </dl>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">Central Syslog Daemon (Peer System)</h2>
+    <dl class="facts">
+      <dt>Protocol Standard</dt><dd>RFC 5424 Syslog Protocol</dd>
+      <dt>Facility / Severity</dt><dd>local0 (16) / Informational (6) [PRI: 134]</dd>
+      <dt>Log Transport</dt><dd>Asynchronous Stream Append</dd>
+      <dt>Structured Data</dt><dd><code>[audit@openease actor="..." target="..."]</code></dd>
+      <dt>Recent Stream Lines</dt><dd><strong><%= syslogLines.length %></strong> entries captured</dd>
+    </dl>
+  </div>
+</div>
+
+<div class="card">
+  <div class="toolbar mb-2" style="display:flex; justify-content:space-between; align-items:center;">
+    <h2 class="section-title mb-0">Raw RFC 5424 Syslog Stream</h2>
+    <button class="btn btn-ghost btn-sm" onclick="location.reload()">Refresh Stream</button>
+  </div>
+
+  <% if (!syslogLines.length) { %>
+    <p class="muted">No syslog events streamed yet.</p>
+  <% } else { %>
+    <pre style="background:#0f172a; color:#38bdf8; padding:1rem; border-radius:6px; font-size:12px; overflow-x:auto; max-height:400px; line-height:1.6; white-space:pre-wrap;"><% syslogLines.forEach(function (line) { %><%= line %>
+<% }) %></pre>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

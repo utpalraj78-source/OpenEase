@@ -1,0 +1,62 @@
+<%- include('../partials/header') %>
+
+<div class="card narrow">
+  <h1>Create your account</h1>
+  <p class="muted">For prospective students and parents. Staff accounts are set up by the institute.</p>
+
+  <% if (typeof errors !== 'undefined' && errors && errors.length) { %>
+    <div class="flash flash-error">
+      <ul class="plain"><% errors.forEach(function (e) { %><li><%= e %></li><% }) %></ul>
+    </div>
+  <% } %>
+
+  <form action="/register" method="post" class="form" novalidate>
+    <fieldset class="radio-row">
+      <legend>I am a</legend>
+      <label><input type="radio" name="participantType" value="STUDENT" <%= form.participantType !== 'PARENT' ? 'checked' : '' %>> Prospective student</label>
+      <label><input type="radio" name="participantType" value="PARENT" <%= form.participantType === 'PARENT' ? 'checked' : '' %>> Parent / guardian</label>
+    </fieldset>
+
+    <div class="grid-2">
+      <label>Full name
+        <input name="fullName" value="<%= form.fullName || '' %>" required>
+      </label>
+      <label>Mobile number
+        <input name="contactPhone" value="<%= form.contactPhone || '' %>" inputmode="numeric" maxlength="10" placeholder="10 digits">
+      </label>
+    </div>
+
+    <label>Email
+      <input type="email" name="email" value="<%= form.email || '' %>" required>
+    </label>
+
+    <div class="grid-2">
+      <label>Current class / level
+        <select name="eligibilityStatus">
+          <% Object.keys(levels).forEach(function (k) { %>
+            <option value="<%= k %>" <%= form.eligibilityStatus === k ? 'selected' : '' %>><%= levels[k] %></option>
+          <% }) %>
+        </select>
+        <span class="hint">Used to check event eligibility. Parents can leave this.</span>
+      </label>
+      <label>School / institution
+        <input name="currentInstitution" value="<%= form.currentInstitution || '' %>">
+      </label>
+    </div>
+
+    <div class="grid-2">
+      <label>Password
+        <input type="password" name="password" minlength="8" required>
+        <span class="hint">At least 8 characters.</span>
+      </label>
+      <label>Confirm password
+        <input type="password" name="confirm" required>
+      </label>
+    </div>
+
+    <button class="btn" type="submit">Create account</button>
+    <a href="/login" class="btn btn-ghost">I already have one</a>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>

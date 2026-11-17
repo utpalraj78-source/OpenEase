@@ -1,0 +1,24 @@
+<%- include('partials/header') %>
+
+<div class="page-head">
+  <h1>Notifications</h1>
+  <% if (items.some(function (i) { return i.notificationStatus === 'UNREAD'; })) { %>
+    <form action="/notifications/read-all" method="post"><button class="btn btn-ghost btn-sm">Mark all as read</button></form>
+  <% } %>
+</div>
+
+<% if (!items.length) { %>
+  <p class="muted">Nothing here yet.</p>
+<% } else { %>
+  <ul class="notif-list">
+    <% items.forEach(function (n) { %>
+      <li class="<%= n.notificationStatus === 'UNREAD' ? 'unread' : '' %>">
+        <span class="tag tag-<%= n.type.toLowerCase() %>"><%= h.statusLabel(n.type) %></span>
+        <a href="/notifications/<%= n._id %>/open"><%= n.message %></a>
+        <span class="muted small"><%= h.timeAgo(n.createdAt) %></span>
+      </li>
+    <% }) %>
+  </ul>
+<% } %>
+
+<%- include('partials/footer') %>

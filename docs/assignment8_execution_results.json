@@ -1,0 +1,233 @@
+{
+  "metadata": {
+    "assignment": "Lab Assignment 8: Software Testing Execution & Results",
+    "course": "CS314 Software Development Laboratory",
+    "institution": "The LNM Institute of Information Technology, Jaipur",
+    "team": "T-008",
+    "members": [
+      {
+        "name": "Utpal Raj",
+        "rollNumber": "23UCC117"
+      },
+      {
+        "name": "Venaya Mulani",
+        "rollNumber": "23UCC121"
+      },
+      {
+        "name": "Shamit Rathi",
+        "rollNumber": "23UCC102"
+      },
+      {
+        "name": "Ekagrah Leekha",
+        "rollNumber": "23UCC041"
+      }
+    ],
+    "executedAt": "2026-11-16T16:50:27.434Z",
+    "environment": {
+      "nodeVersion": "v24.14.0",
+      "platform": "win32",
+      "database": "PostgreSQL (pg / @electric-sql/pglite)"
+    },
+    "summary": {
+      "total": 12,
+      "passed": 12,
+      "failed": 0,
+      "executionRate": "100%",
+      "passRate": "100%"
+    }
+  },
+  "results": [
+    {
+      "testId": "TC-003-01",
+      "module": "Event Management",
+      "useCase": "UC-003 (Submit Event Proposal)",
+      "technique": "Equivalence Partitioning + System Testing",
+      "description": "Submit an event proposal with valid details by authorized coordinator",
+      "status": "PASS",
+      "durationMs": 36,
+      "evidence": [
+        "Coordinator POST /coordinator/events returned HTTP status 302",
+        "Persisted Event ID: c367503e9d6e5992275de6e4 with status: SUBMITTED"
+      ],
+      "error": null,
+      "executedAt": "2026-11-16T16:50:26.938Z"
+    },
+    {
+      "testId": "TC-003-02",
+      "module": "Event Management",
+      "useCase": "UC-003 (Submit Event Proposal)",
+      "technique": "Equivalence Partitioning + System (Security / Negative)",
+      "description": "Reject event creation proposal by unauthorized role (Student) and unauthenticated user",
+      "status": "PASS",
+      "durationMs": 36,
+      "evidence": [
+        "Student POST /coordinator/events returned HTTP status 403",
+        "Anonymous POST /coordinator/events returned HTTP status 302",
+        "Verified database: unauthorized submission was completely prevented"
+      ],
+      "error": null,
+      "executedAt": "2026-11-16T16:50:26.974Z"
+    },
+    {
+      "testId": "TC-003-03",
+      "module": "Event Management",
+      "useCase": "UC-003 (Submit Event Proposal)",
+      "technique": "Boundary Value Analysis (BVA)",
+      "description": "Validate event date/time boundaries and session capacity limits",
+      "status": "PASS",
+      "durationMs": 68,
+      "evidence": [
+        "End time before start time returned HTTP status 400",
+        "Session capacity > Event capacity returned HTTP status 400",
+        "Past event date (-5 days) returned HTTP status 400"
+      ],
+      "error": null,
+      "executedAt": "2026-11-16T16:50:27.010Z"
+    },
+    {
+      "testId": "TC-003-04",
+      "module": "Event Management",
+      "useCase": "UC-003 (Submit Event Proposal)",
+      "technique": "Integration Testing",
+      "description": "Verify integrated event submission, multi-session persistence, and audit logging",
+      "status": "PASS",
+      "durationMs": 33,
+      "evidence": [
+        "Verified persisted Sessions count: 2",
+        "Verified Audit Log: Action=SUBMIT_EVENT"
+      ],
+      "error": null,
+      "executedAt": "2026-11-16T16:50:27.078Z"
+    },
+    {
+      "testId": "TC-009-01",
+      "module": "Registration Management",
+      "useCase": "UC-009 (Register for Event/Session)",
+      "technique": "Equivalence Partitioning + System Testing",
+      "description": "Register an eligible participant for a published event session with valid consents",
+      "status": "PASS",
+      "durationMs": 27,
+      "evidence": [
+        "Student POST /events/c367503e9d6e5992275de6e4/register returned HTTP status 302",
+        "Registration created with ID: 22570e2da4dfa858e9f60802",
+        "Session booked seats successfully incremented to: 1"
+      ],
+      "error": null,
+      "executedAt": "2026-11-16T16:50:27.132Z"
+    },
+    {
+      "testId": "TC-009-02",
+      "module": "Registration Management",
+      "useCase": "UC-009 (Register for Event/Session)",
+      "technique": "Equivalence Partitioning (Negative / Duplicate & State)",
+      "description": "Reject duplicate registration for the same session and registration for unpublished event",
+      "status": "PASS",
+      "durationMs": 20,
+      "evidence": [
+        "Duplicate registration attempt returned HTTP status 409",
+        "Duplicate enrollment rejected with ERR_DUPLICATE_REGISTRATION",
+        "Registration on draft event returned HTTP status 404"
+      ],
+      "error": null,
+      "executedAt": "2026-11-16T16:50:27.159Z"
+    },
+    {
+      "testId": "TC-009-03",
+      "module": "Registration Management",
+      "useCase": "UC-009 (Register for Event/Session)",
+      "technique": "Boundary Value Analysis (BVA)",
+      "description": "Check registration time-window boundaries, missing consents, and capacity saturation",
+      "status": "PASS",
+      "durationMs": 43,
+      "evidence": [
+        "Registration without consent checkboxes returned HTTP status 400",
+        "Registration when session is fully booked returned HTTP status 422",
+        "Capacity boundary reached: ERR_CAPACITY_EXCEEDED returned correctly"
+      ],
+      "error": null,
+      "executedAt": "2026-11-16T16:50:27.179Z"
+    },
+    {
+      "testId": "TC-009-04",
+      "module": "Registration Management",
+      "useCase": "UC-009 (Register for Event/Session)",
+      "technique": "Integration Testing",
+      "description": "Verify registration validation, persistence, session capacity counter, and confirmation artifacts",
+      "status": "PASS",
+      "durationMs": 75,
+      "evidence": [
+        "Student 2 registration POST returned HTTP status 302",
+        "Persisted second registration with ID: c1bb989ad23b289581a94bd1",
+        "Registration detail GET returned HTTP status 200",
+        "Calendar .ics download returned HTTP status 200",
+        "Verified session bookedSeats correctly reflects total registrations: 2"
+      ],
+      "error": null,
+      "executedAt": "2026-11-16T16:50:27.222Z"
+    },
+    {
+      "testId": "TC-012-01",
+      "module": "Attendance Management",
+      "useCase": "UC-012 (Record Attendance)",
+      "technique": "Equivalence Partitioning + System Testing",
+      "description": "Record attendance (PRESENT) for a registered participant by authorized coordinator",
+      "status": "PASS",
+      "durationMs": 13,
+      "evidence": [
+        "Coordinator attendance POST returned HTTP status 302",
+        "Attendance persisted: ID=ATT-700003, Status=PRESENT, Timestamp=2026-11-16T16:50:27.307Z"
+      ],
+      "error": null,
+      "executedAt": "2026-11-16T16:50:27.298Z"
+    },
+    {
+      "testId": "TC-012-02",
+      "module": "Attendance Management",
+      "useCase": "UC-012 (Record Attendance)",
+      "technique": "Equivalence Partitioning (Negative / Access Control)",
+      "description": "Reject unauthorized attendance recording by student and reject invalid participant ID",
+      "status": "PASS",
+      "durationMs": 15,
+      "evidence": [
+        "Student attendance POST returned HTTP status 403",
+        "Batch attendance with invalid registration ID returned HTTP status 200",
+        "Batch validation reported expected failure: \"Participant ID not found in the verified roster for this session.\""
+      ],
+      "error": null,
+      "executedAt": "2026-11-16T16:50:27.311Z"
+    },
+    {
+      "testId": "TC-012-03",
+      "module": "Attendance Management",
+      "useCase": "UC-012 (Record Attendance)",
+      "technique": "Boundary Value Analysis & State Validation",
+      "description": "Validate attendance status enumeration (PRESENT, ABSENT, PENDING) and reject invalid status values",
+      "status": "PASS",
+      "durationMs": 48,
+      "evidence": [
+        "Batch attendance with invalid status returned failedRecords: 1",
+        "Successfully transitioned status to ABSENT",
+        "Successfully reset attendance status to PENDING"
+      ],
+      "error": null,
+      "executedAt": "2026-11-16T16:50:27.326Z"
+    },
+    {
+      "testId": "TC-012-04",
+      "module": "Attendance Management",
+      "useCase": "UC-012 (Record Attendance)",
+      "technique": "Integration Testing",
+      "description": "Verify persistence of attendance record and authorized retrieval across coordinator roster and student dashboard",
+      "status": "PASS",
+      "durationMs": 59,
+      "evidence": [
+        "Coordinator GET /api/v1/sessions/.../roster returned HTTP status 200",
+        "Roster verified: Student Aarav Patel is PRESENT",
+        "Student dashboard verified: attendance confirmation is visible to student",
+        "Event Report GET returned HTTP status 200"
+      ],
+      "error": null,
+      "executedAt": "2026-11-16T16:50:27.374Z"
+    }
+  ]
+}

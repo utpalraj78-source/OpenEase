@@ -1,0 +1,76 @@
+<%- include('partials/header') %>
+
+<section class="hero-photo" style="background-image: url('/img/hero.jpg')">
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <h1>Come See Our Campus<br>Before You Decide</h1>
+    <p>Open house days for prospective students and parents: lab tours, hostel visits and admissions Q&amp;A.</p>
+    <a href="/events" class="btn btn-lg">Find an open house</a>
+  </div>
+</section>
+
+<div class="wrap">
+  <form class="quick-search" action="/events" method="get">
+    <label class="qs-field">
+      <span>Keyword</span>
+      <input type="search" name="q" placeholder="e.g. engineering, MBA">
+    </label>
+    <label class="qs-field">
+      <span>Category</span>
+      <select name="category">
+        <option value="">Any category</option>
+        <% categories.forEach(function (c) { %><option value="<%= c._id %>"><%= c.categoryName %></option><% }) %>
+      </select>
+    </label>
+    <label class="qs-field">
+      <span>I am in</span>
+      <select name="eligibility">
+        <option value="">Any eligibility</option>
+        <% Object.keys(C.ELIGIBILITY).forEach(function (k) { %><option value="<%= k %>"><%= C.ELIGIBILITY[k] %></option><% }) %>
+      </select>
+    </label>
+    <label class="qs-field">
+      <span>From date</span>
+      <input type="date" name="from">
+    </label>
+    <button class="btn" type="submit">Search</button>
+  </form>
+</div>
+
+<section class="band">
+  <div class="wrap">
+    <h2 class="display center">Upcoming Open Houses</h2>
+
+    <div class="tabbar">
+      <a href="/events" class="on">All events</a>
+      <% categories.forEach(function (c) { %>
+        <a href="/events?category=<%= c._id %>"><%= c.categoryName %></a>
+      <% }) %>
+    </div>
+    <div class="tabpanel">
+      <% if (!upcoming.length) { %>
+        <p class="muted center">No open house events are published right now. Check back soon.</p>
+      <% } else { %>
+        <div class="event-grid">
+          <% upcoming.forEach(function (e) { %>
+            <a class="event-card" href="/events/<%= e._id %>">
+              <div class="event-card-top">
+                <div class="date-chip">
+                  <span><%= new Date(e.schedule.eventDate).getDate() %></span>
+                  <small><%= h.fmtDate(e.schedule.eventDate).split(' ')[2] %></small>
+                </div>
+                <span class="tag"><%= e.category ? e.category.categoryName : '' %></span>
+              </div>
+              <h3><%= e.title %></h3>
+              <p class="muted small"><%= h.fmtTime(e.schedule.startTime) %> - <%= h.fmtTime(e.schedule.endTime) %> &middot; <%= e.venue ? e.venue.label : '' %></p>
+              <span class="card-link"><%= e.registrationState() %> &rarr;</span>
+            </a>
+          <% }) %>
+        </div>
+      <% } %>
+    </div>
+    <p class="center mt-2"><a href="/events" class="btn">See all events</a></p>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,63 @@
+<%- include('../partials/header') %>
+
+<p class="crumbs"><a href="/reports">Reports</a> / <%= s.event.eventId %></p>
+
+<div class="page-head">
+  <div>
+    <h1 class="mb-1"><%= s.event.title %></h1>
+    <p class="meta"><%= h.fmtDate(s.event.schedule.eventDate) %> &middot; <%= s.event.category ? s.event.category.categoryName : '' %></p>
+  </div>
+  <button class="btn btn-ghost btn-sm" onclick="window.print()">Print</button>
+</div>
+
+<div class="metrics">
+  <div><span><%= s.confirmed %></span>Registered (of <%= s.event.totalMaxCapacity %>)</div>
+  <div><span><%= s.cancelled %></span>Cancelled</div>
+  <div class="m-present"><span><%= s.present %></span>Present</div>
+  <div class="m-absent"><span><%= s.absent %></span>Absent</div>
+</div>
+
+<h2 class="section-title">By session</h2>
+<table class="table">
+  <thead><tr><th>Session</th><th>Room</th><th>Booked</th><th>Present</th><th>Turnout</th></tr></thead>
+  <tbody>
+    <% sessions.forEach(function (x) { var pct = x.booked ? Math.round(x.present / x.booked * 100) : 0; %>
+      <tr>
+        <td><%= x.session.startTime %> &middot; <%= x.session.sessionTitle %></td>
+        <td><%= x.session.venue ? x.session.venue.label : '' %></td>
+        <td>
+          <div class="bar"><span style="width: <%= Math.round(x.booked / x.capacity * 100) %>%"></span></div>
+          <span class="small"><%= x.booked %> / <%= x.capacity %></span>
+        </td>
+        <td><%= x.present %></td>
+        <td><div class="bar bar-green"><span style="width: <%= pct %>%"></span></div><span class="small"><%= pct %>%</span></td>
+      </tr>
+    <% }) %>
+  </tbody>
+</table>
+
+<h2 class="section-title">Participant Feedback (<%= feedback ? feedback.count : 0 %>)</h2>
+<% if (!feedback || !feedback.count) { %>
+  <p class="muted">No feedback submitted for this event yet.</p>
+<% } else { %>
+  <div class="metrics mb-3">
+    <div><span>★ <%= feedback.avgRating %> / 5</span>Average Rating</div>
+    <div><span><%= feedback.count %></span>Responses</div>
+  </div>
+
+  <table class="table">
+    <thead><tr><th>Participant</th><th>Rating</th><th>Comments</th><th>Date</th></tr></thead>
+    <tbody>
+      <% feedback.items.forEach(function (f) { %>
+        <tr>
+          <td><%= f.participant ? f.participant.fullName : 'Anonymous' %> <span class="muted small">(<%= f.participant ? f.participant.participantType : '' %>)</span></td>
+          <td><strong>★ <%= f.rating %>/5</strong></td>
+          <td><%= f.comments || '-' %></td>
+          <td class="nowrap small"><%= h.fmtDateTime(f.createdAt) %></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+<% } %>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,35 @@
+<%- include('../partials/header') %>
+
+<div class="page-head">
+  <h1>My registrations</h1>
+  <a href="/events" class="btn btn-ghost btn-sm">Find more events</a>
+</div>
+
+<% if (!regs.length) { %>
+  <div class="empty">
+    <p>You haven't registered for anything yet.</p>
+    <a href="/events" class="btn">Browse events</a>
+  </div>
+<% } else { %>
+  <table class="table">
+    <thead>
+      <tr><th>Booking ID</th><th>Event</th><th>Date</th><th>Session</th><th>Status</th><th></th></tr>
+    </thead>
+    <tbody>
+      <% regs.forEach(function (r) {
+           var over = r.event && r.event.hasEnded();
+           var label = r.status === 'CANCELLED' ? 'CANCELLED' : (over ? 'COMPLETED' : 'REGISTERED'); %>
+        <tr class="<%= r.status === 'CANCELLED' ? 'dim' : '' %>">
+          <td><code><%= r.registrationId %></code></td>
+          <td><%= r.event ? r.event.title : '(removed)' %></td>
+          <td class="nowrap"><%= r.event ? h.fmtDate(r.event.schedule.eventDate) : '' %></td>
+          <td><%= r.session ? r.session.sessionTitle : '' %><br><span class="muted small"><%= r.session ? h.fmtTime(r.session.startTime) + ' · ' + (r.session.venue ? r.session.venue.label : '') : '' %></span></td>
+          <td><%- include('../partials/status', { status: label }) %></td>
+          <td><a href="/my/registrations/<%= r._id %>">Open</a></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+<% } %>
+
+<%- include('../partials/footer') %>

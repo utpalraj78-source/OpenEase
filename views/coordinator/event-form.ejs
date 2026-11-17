@@ -1,0 +1,237 @@
+<%- include('../partials/header') %>
+<%
+  // values come from the re-posted form (after a validation error) or from the saved event
+  var f = form || {};
+  var e = event || {};
+  var sch = e.schedule || {}, per = e.registrationPeriod || {}, crit = e.eligibilityCriteria || {};
+  function val(key, fallback) { return f[key] !== undefined ? f[key] : (fallback !== undefined && fallback !== null ? fallback : ''); }
+  var isPublished = e.status === 'PUBLISHED';
+  // which wizard step an error message belongs to, so the page can jump there
+  function stepFor(msg) {
+    if (/session|overlap/i.test(msg)) return 4;
+    if (/registration|eligib/i.test(msg)) return 3;
+    if (/venue|capacity|maintenance/i.test(msg)) return 2;
+    return 1;
+  }
+  var steps = ['Basic Details', 'Schedule & Venue', 'Registration & Eligibility', 'Sessions', 'Review & Submit'];
+%>
+
+<p class="crumbs"><a href="/coordinator/events">My Events</a> / <%= event ? event.eventId : 'Create Event' %></p>
+
+<div class="page-head">
+  <div>
+    <h1 class="mb-1"><%= event ? 'Edit Event' : 'Create New Event' %></h1>
+    <p class="muted">Enter open house details and configure the event workflow.</p>
+  </div>
+  <span class="status-pill"><%= event ? h.statusLabel(event.status) : 'Draft' %></span>
+</div>
+
+<% if (e.status === 'REVISION_REQUIRED' && e.reviews && e.reviews.length) { %>
+  <div class="flash flash-info">
+    <strong>Approver asked for changes:</strong> <%= e.reviews[e.reviews.length - 1].comments %>
+    Resubmitting sends it straight back to review.
+  </div>
+<% } %>
+<% if (isPublished) { %>
+  <div class="flash flash-info">This event is live. If you change the date, time or venue, registered participants get a notification.</div>
+<% } %>
+
+<% if (errors && errors.length) { %>
+  <div class="flash flash-error" id="formErrors" data-step="<%= stepFor(errors[0]) %>">
+    <strong>Please fix the following:</strong>
+    <ul><% errors.forEach(function (msg) { %><li><%= msg %> <a href="#" class="js-goto" data-step="<%= stepFor(msg) %>">(step <%= stepFor(msg) %>)</a></li><% }) %></ul>
+  </div>
+<% } %>
+
+<form method="post" action="<%= event ? '/coordinator/events/' + event._id : '/coordinator/events' %>" class="form event-form" id="eventForm" novalidate>
+
+  <ol class="stepper card" id="stepper">
+    <% steps.forEach(function (name, i) { %>
+      <li data-step="<%= i + 1 %>" class="<%= i === 0 ? 'current' : '' %>">
+        <button type="button" class="js-goto" data-step="<%= i + 1 %>"><span class="dot"><%= i + 1 %></span><span class="name"><%= name %></span></button>
+      </li>
+    <% }) %>
+  </ol>
+
+  <!-- step 1 -->
+  <section class="wizard-step" data-step="1">
+    <div class="grid-split">
+      <div class="card">
+        <h2><span class="num">01</span> Event Basic Information</h2>
+        <div class="grid-2">
+          <label>Event Title <span class="req">*</span>
+            <input name="title" maxlength="150" value="<%= val('title', e.title) %>" placeholder="e.g. Spring 2027 Open House">
+          </label>
+          <label>Event Category <span class="req">*</span>
+            <select name="category">
+              <option value="">Select a category</option>
+              <% categories.forEach(function (c) { %>
+                <option value="<%= c._id %>" <%= String(val('category', e.category)) === String(c._id) ? 'selected' : '' %>><%= c.categoryName %></option>
+              <% }) %>
+            </select>
+          </label>
+        </div>
+        <label>Description <span class="req">*</span>
+          <textarea name="description" rows="4" maxlength="3000" placeholder="Provide a brief overview of the event for attendees..."><%= val('description', e.description) %></textarea>
+        </label>
+      </div>
+      <div>
+        <div class="card">
+          <h2><span class="num">02</span> Event Date and Time</h2>
+          <div class="grid-3">
+            <label>Event Date <span class="req">*</span>
+              <input type="date" name="eventDate" value="<%= val('eventDate', h.toInputDate(sch.eventDate)) %>">
+            </label>
+            <label>Start Time <span class="req">*</span>
+              <input type="time" name="startTime" min="08:00" max="20:00" value="<%= val('startTime', sch.startTime) %>">
+            </label>
+            <label>End Time <span class="req">*</span>
+              <input type="time" name="endTime" min="08:00" max="20:00" value="<%= val('endTime', sch.endTime) %>">
+            </label>
+          </div>
+        </div>
+        <div class="card">
+          <h2><span class="num">03</span> Organizer Details</h2>
+          <div class="grid-2">
+            <label>Department <span class="req">*</span>
+              <input name="organizer" value="<%= val('organizer', e.organizer || currentUser.department) %>">
+            </label>
+            <label>Contact Email
+              <input value="<%= currentUser.email %>" readonly>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h2><span class="num">04</span> Additional Configuration</h2>
+      <p class="info-row">Configure registration period and eligibility in <strong>Step 3</strong>. &nbsp;|&nbsp; Add open house sessions in <strong>Step 4</strong>.</p>
+    </div>
+  </section>
+
+  <!-- step 2 -->
+  <section class="wizard-step" data-step="2">
+    <div class="card">
+      <h2><span class="num">05</span> Schedule &amp; Venue</h2>
+      <div class="grid-2">
+        <label>Main venue (reporting point) <span class="req">*</span>
+          <select name="venue">
+            <option value="">Select a venue</option>
+            <% venues.forEach(function (v) { %>
+              <option value="<%= v._id %>" <%= String(val('venue', e.venue)) === String(v._id) ? 'selected' : '' %>><%= v.label %> (<%= v.seatingCapacity %> seats)</option>
+            <% }) %>
+          </select>
+          <span class="hint">Rooms under maintenance are not listed.</span>
+        </label>
+        <label>Total Max Capacity <span class="req">*</span>
+          <input type="number" name="totalMaxCapacity" min="1" value="<%= val('totalMaxCapacity', e.totalMaxCapacity) %>" id="totalCap">
+          <span class="hint">Session seats together can't go above this.</span>
+        </label>
+      </div>
+      <p class="muted small">Event timings must be between 08:00 and 20:00. The room is checked for clashes with other events when you submit.</p>
+    </div>
+  </section>
+
+  <!-- step 3 -->
+  <section class="wizard-step" data-step="3">
+    <div class="card">
+      <h2><span class="num">06</span> Registration Period</h2>
+      <div class="grid-2">
+        <label>Registration Start <span class="req">*</span>
+          <input type="datetime-local" name="registrationStart" value="<%= val('registrationStart', h.toInputDateTime(per.registrationStart)) %>">
+        </label>
+        <label>Registration End <span class="req">*</span>
+          <input type="datetime-local" name="registrationEnd" value="<%= val('registrationEnd', h.toInputDateTime(per.registrationEnd)) %>">
+          <span class="hint">Must be before the event day.</span>
+        </label>
+      </div>
+    </div>
+    <div class="card">
+      <h2><span class="num">07</span> Eligibility Criteria</h2>
+      <label>Eligibility Criteria <span class="req">*</span>
+        <select name="criteriaId">
+          <% Object.keys(C.ELIGIBILITY).forEach(function (k) { %>
+            <option value="<%= k %>" <%= val('criteriaId', crit.criteriaId) === k ? 'selected' : '' %>><%= C.ELIGIBILITY[k] %></option>
+          <% }) %>
+        </select>
+      </label>
+      <label>Description / instructions for visitors
+        <textarea name="criteriaDescription" rows="3" maxlength="2000" placeholder="ID proof, parking, what to bring..."><%= val('criteriaDescription', crit.description) %></textarea>
+      </label>
+    </div>
+  </section>
+
+  <!-- step 4 -->
+  <section class="wizard-step" data-step="4">
+    <div class="card">
+      <div class="card-head">
+        <h2><span class="num">08</span> Open House Sessions <span class="req">*</span></h2>
+        <span class="small muted">Allocated: <strong id="capSum">0</strong> / <span id="capTotal">0</span></span>
+      </div>
+      <table class="table sessions-table" id="sessionsTable">
+        <thead>
+          <tr><th>Session title</th><th>Speaker / host</th><th>Start</th><th>End</th><th>Room</th><th>Seats</th><th></th></tr>
+        </thead>
+        <tbody>
+          <% var rows = sessions.length ? sessions : [{}];
+             rows.forEach(function (s) { %>
+            <tr class="session-row">
+              <td>
+                <input type="hidden" name="sessions[id][]" value="<%= s._id || '' %>">
+                <input name="sessions[sessionTitle][]" value="<%= s.sessionTitle || '' %>" placeholder="e.g. Robotics lab tour">
+              </td>
+              <td><input name="sessions[speaker][]" value="<%= s.speaker || '' %>"></td>
+              <td><input type="time" name="sessions[startTime][]" value="<%= s.startTime || '' %>"></td>
+              <td><input type="time" name="sessions[endTime][]" value="<%= s.endTime || '' %>"></td>
+              <td>
+                <select name="sessions[venue][]">
+                  <option value="">--</option>
+                  <% venues.forEach(function (v) { %>
+                    <option value="<%= v._id %>" <%= String(s.venue && (s.venue._id || s.venue)) === String(v._id) ? 'selected' : '' %>><%= v.label %> (<%= v.seatingCapacity %>)</option>
+                  <% }) %>
+                </select>
+              </td>
+              <td><input type="number" min="1" name="sessions[allocatedCapacity][]" value="<%= s.allocatedCapacity || '' %>" class="cap-input"></td>
+              <td>
+                <% if (s.bookedSeats) { %>
+                  <span class="small muted" title="Has bookings, can't remove"><%= s.bookedSeats %> booked</span>
+                <% } else { %>
+                  <button type="button" class="linkbtn js-remove-row" title="Remove">Remove</button>
+                <% } %>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+      <button type="button" class="btn btn-ghost btn-sm" id="addSession">+ Add session</button>
+    </div>
+  </section>
+
+  <!-- step 5 -->
+  <section class="wizard-step" data-step="5">
+    <div class="card">
+      <h2><span class="num">09</span> Review &amp; Submit</h2>
+      <p class="muted small">Check everything before sending it to the approver. Use Back or the steps above to change something.</p>
+      <dl class="facts facts-wide" id="reviewBox"></dl>
+      <div id="reviewSessions"></div>
+    </div>
+  </section>
+
+  <div class="wizard-bar card">
+    <span class="small muted">Fields marked with <span class="req">*</span> are required</span>
+    <span class="spacer"></span>
+    <a href="/coordinator" class="btn btn-ghost js-discard">Cancel</a>
+    <% if (isPublished) { %>
+      <button type="submit" name="action" value="draft" class="btn btn-outline">Save changes</button>
+    <% } else { %>
+      <button type="submit" name="action" value="draft" class="btn btn-outline">Save Draft</button>
+    <% } %>
+    <button type="button" class="btn btn-ghost js-prev" hidden>&larr; Back</button>
+    <button type="button" class="btn btn-blue js-next">Next &rarr;</button>
+    <% if (!isPublished) { %>
+      <button type="submit" name="action" value="submit" class="btn js-submit">Submit for Approval</button>
+    <% } %>
+  </div>
+</form>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,76 @@
+<%- include('../partials/header') %>
+
+<p class="crumbs"><a href="/approver">Review queue</a> / <%= event.eventId %></p>
+
+<div class="page-head">
+  <div>
+    <h1 class="mb-1"><%= event.title %></h1>
+    <p class="meta">Submitted by <%= event.coordinator.fullName %> (<%= event.coordinator.department || event.coordinator.email %>)</p>
+  </div>
+  <%- include('../partials/status', { status: event.status }) %>
+</div>
+
+<div class="detail-layout">
+  <div>
+    <div class="card">
+      <dl class="facts facts-wide">
+        <dt>Category</dt><dd><%= event.category ? event.category.categoryName : '-' %></dd>
+        <dt>Date</dt><dd><%= h.fmtDate(event.schedule.eventDate) %>, <%= h.fmtTime(event.schedule.startTime) %> - <%= h.fmtTime(event.schedule.endTime) %></dd>
+        <dt>Main venue</dt><dd><%= event.venue ? event.venue.label + ' (' + event.venue.seatingCapacity + ' seats)' : '-' %></dd>
+        <dt>Capacity</dt><dd><%= event.totalMaxCapacity %></dd>
+        <dt>Registration</dt><dd><%= h.fmtDateTime(event.registrationPeriod.registrationStart) %> to <%= h.fmtDateTime(event.registrationPeriod.registrationEnd) %></dd>
+        <dt>Eligibility</dt><dd><%= C.ELIGIBILITY[event.eligibilityCriteria.criteriaId] %></dd>
+        <dt>Organiser</dt><dd><%= event.organizer || '-' %></dd>
+      </dl>
+      <h3>Description</h3>
+      <div class="prose"><%= event.description %></div>
+      <% if (event.eligibilityCriteria.description) { %><h3>Visitor instructions</h3><div class="prose"><%= event.eligibilityCriteria.description %></div><% } %>
+    </div>
+
+    <h2 class="section-title">Sessions (<%= sessions.length %>)</h2>
+    <table class="table">
+      <thead><tr><th>Time</th><th>Session</th><th>Room</th><th>Seats</th></tr></thead>
+      <tbody>
+        <% var sum = 0; sessions.forEach(function (s) { sum += s.allocatedCapacity; %>
+          <tr>
+            <td class="nowrap"><%= h.fmtTime(s.startTime) %> - <%= h.fmtTime(s.endTime) %></td>
+            <td><%= s.sessionTitle %><% if (s.speaker) { %> <span class="muted small">- <%= s.speaker %></span><% } %></td>
+            <td><%= s.venue ? s.venue.label : '' %></td>
+            <td><%= s.allocatedCapacity %></td>
+          </tr>
+        <% }) %>
+        <tr class="total-row"><td colspan="3">Total allocated</td><td><%= sum %> / <%= event.totalMaxCapacity %></td></tr>
+      </tbody>
+    </table>
+
+    <% if (event.reviews.length) { %>
+      <h2 class="section-title">Approval history</h2>
+      <ul class="timeline">
+        <% event.reviews.forEach(function (r) { %>
+          <li><strong><%= h.statusLabel(r.decision) %></strong> by <%= r.reviewer ? r.reviewer.fullName : '?' %>
+            <span class="muted small">&middot; <%= h.fmtDateTime(r.decidedAt) %></span>
+            <% if (r.comments) { %><br><span class="small"><%= r.comments %></span><% } %></li>
+        <% }) %>
+      </ul>
+    <% } %>
+  </div>
+
+  <aside class="card sidebar">
+    <% if (['SUBMITTED', 'UNDER_REVIEW'].indexOf(event.status) !== -1) { %>
+      <h3>Your decision</h3>
+      <form method="post" action="/approver/events/<%= event._id %>/decision" class="form">
+        <label class="radio-block"><input type="radio" name="decision" value="APPROVED" checked> Approve</label>
+        <label class="radio-block"><input type="radio" name="decision" value="REVISION_REQUIRED"> Send back for changes</label>
+        <label class="radio-block"><input type="radio" name="decision" value="REJECTED"> Reject</label>
+        <label>Comments
+          <textarea name="comments" rows="4" placeholder="Required if you reject or ask for changes"></textarea>
+        </label>
+        <button class="btn btn-block" type="submit">Submit decision</button>
+      </form>
+    <% } else { %>
+      <p class="muted">This event has already been decided.</p>
+    <% } %>
+  </aside>
+</div>
+
+<%- include('../partials/footer') %>

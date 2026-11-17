@@ -1,0 +1,32 @@
+<%- include('../partials/header') %>
+
+<div class="page-head">
+  <div>
+    <h1 class="mb-1">Attendance</h1>
+    <p class="muted">Pick a session of a published event to open its roster.</p>
+  </div>
+</div>
+
+<% if (!byEvent.length) { %>
+  <div class="empty"><p>You don't have any published events yet.</p></div>
+<% } %>
+
+<% byEvent.forEach(function (g) { %>
+  <h2 class="section-title"><%= g.event.title %> <span class="muted small"><%= h.fmtDate(g.event.schedule.eventDate) %></span></h2>
+  <table class="table">
+    <thead><tr><th>Session</th><th>Time</th><th>Room</th><th>Registered</th><th></th></tr></thead>
+    <tbody>
+      <% g.sessions.forEach(function (s) { %>
+        <tr>
+          <td><%= s.sessionTitle %></td>
+          <td class="nowrap"><%= h.fmtTime(s.startTime) %> - <%= h.fmtTime(s.endTime) %></td>
+          <td><%= s.venue ? s.venue.label : '' %></td>
+          <td><%= s.bookedSeats %> / <%= s.allocatedCapacity %></td>
+          <td><a class="btn btn-sm" href="/coordinator/sessions/<%= s._id %>/attendance">Take attendance</a></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+<% }) %>
+
+<%- include('../partials/footer') %>

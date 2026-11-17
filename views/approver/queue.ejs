@@ -1,0 +1,46 @@
+<%- include('../partials/header') %>
+
+<div class="page-head">
+  <h1>Review queue</h1>
+  <span class="muted"><%= pending.length %> waiting</span>
+</div>
+
+<% if (!pending.length) { %>
+  <div class="empty"><p>Nothing to review right now.</p></div>
+<% } else { %>
+  <table class="table">
+    <thead><tr><th>ID</th><th>Event</th><th>Coordinator</th><th>Event date</th><th>Submitted</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <% pending.forEach(function (e) { %>
+        <tr>
+          <td><code><%= e.eventId %></code></td>
+          <td><%= e.title %><br><span class="muted small"><%= e.category ? e.category.categoryName : '' %></span></td>
+          <td><%= e.coordinator ? e.coordinator.fullName : '' %><br><span class="muted small"><%= e.coordinator ? e.coordinator.department || '' : '' %></span></td>
+          <td class="nowrap"><%= h.fmtDate(e.schedule.eventDate) %></td>
+          <td class="small"><%= h.timeAgo(e.updatedAt) %></td>
+          <td><%- include('../partials/status', { status: e.status }) %></td>
+          <td><a class="btn btn-sm" href="/approver/events/<%= e._id %>">Review</a></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+<% } %>
+
+<% if (decided.length) { %>
+  <h2 class="section-title">Your recent decisions</h2>
+  <table class="table">
+    <thead><tr><th>ID</th><th>Event</th><th>Coordinator</th><th>Current status</th></tr></thead>
+    <tbody>
+      <% decided.forEach(function (e) { %>
+        <tr>
+          <td><code><%= e.eventId %></code></td>
+          <td><%= e.title %></td>
+          <td><%= e.coordinator ? e.coordinator.fullName : '' %></td>
+          <td><%- include('../partials/status', { status: e.status }) %></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+<% } %>
+
+<%- include('../partials/footer') %>

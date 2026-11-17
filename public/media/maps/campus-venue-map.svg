@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" width="100%" height="100%" style="background:#f8fafc; font-family:'Segoe UI', sans-serif;">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1d4ed8;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#047857;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Title bar -->
+  <rect x="0" y="0" width="900" height="70" fill="#0f172a" />
+  <text x="30" y="44" fill="#ffffff" font-size="24" font-weight="bold">OpenEase Campus Map &amp; Venue Directory</text>
+  <text x="700" y="44" fill="#94a3b8" font-size="14">Static Media Service (Tier 4)</text>
+
+  <!-- Campus Roads / Walkways -->
+  <rect x="50" y="270" width="800" height="40" fill="#e2e8f0" rx="6" />
+  <rect x="420" y="80" width="40" height="460" fill="#e2e8f0" rx="6" />
+  <text x="210" y="295" fill="#64748b" font-size="12" letter-spacing="3">MAIN CENTRAL BOULEVARD</text>
+
+  <!-- Main Academic Building / Lecture Halls -->
+  <g transform="translate(60, 100)">
+    <rect width="220" height="140" fill="url(#grad1)" rx="8" stroke="#1e40af" stroke-width="2" />
+    <text x="20" y="35" fill="#ffffff" font-size="16" font-weight="bold">Main Academic Block</text>
+    <text x="20" y="65" fill="#e0e7ff" font-size="13">• Seminar Hall A (Cap: 150)</text>
+    <text x="20" y="90" fill="#e0e7ff" font-size="13">• Lecture Hall 1 (Cap: 120)</text>
+    <text x="20" y="115" fill="#e0e7ff" font-size="13">• Lecture Hall 2 (Cap: 100)</text>
+  </g>
+
+  <!-- Innovation & Incubation Center -->
+  <g transform="translate(580, 100)">
+    <rect width="240" height="140" fill="#6366f1" rx="8" stroke="#4338ca" stroke-width="2" />
+    <text x="20" y="35" fill="#ffffff" font-size="16" font-weight="bold">Incubation &amp; Startup Hub</text>
+    <text x="20" y="65" fill="#e0e7ff" font-size="13">• Incubation Lab 1</text>
+    <text x="20" y="90" fill="#e0e7ff" font-size="13">• Conference Room B</text>
+    <text x="20" y="115" fill="#e0e7ff" font-size="13">• Student Showcase Gallery</text>
+  </g>
+
+  <!-- Engineering Labs Complex -->
+  <g transform="translate(60, 340)">
+    <rect width="220" height="150" fill="url(#grad2)" rx="8" stroke="#065f46" stroke-width="2" />
+    <text x="20" y="35" fill="#ffffff" font-size="16" font-weight="bold">Computing &amp; AI Complex</text>
+    <text x="20" y="65" fill="#d1fae5" font-size="13">• CSE Lab 1 &amp; Lab 2</text>
+    <text x="20" y="90" fill="#d1fae5" font-size="13">• Robotics &amp; IoT Lab</text>
+    <text x="20" y="115" fill="#d1fae5" font-size="13">• VLSI Design Facility</text>
+    <text x="20" y="135" fill="#d1fae5" font-size="13">• High-Performance Computing</text>
+  </g>
+
+  <!-- Visitor Reception & Registration Desk -->
+  <g transform="translate(580, 340)">
+    <rect width="240" height="150" fill="#ea580c" rx="8" stroke="#c2410c" stroke-width="2" />
+    <text x="20" y="35" fill="#ffffff" font-size="16" font-weight="bold">Welcome &amp; Help Desk</text>
+    <text x="20" y="65" fill="#ffedd5" font-size="13">• Open House Check-in</text>
+    <text x="20" y="90" fill="#ffedd5" font-size="13">• Attendance Terminal Desk</text>
+    <text x="20" y="115" fill="#ffedd5" font-size="13">• Campus Tour Assembly Point</text>
+    <text x="20" y="135" fill="#ffedd5" font-size="13">• Refreshments &amp; Helpdesk</text>
+  </g>
+
+  <!-- Legend -->
+  <rect x="50" y="520" width="800" height="50" fill="#ffffff" stroke="#cbd5e1" rx="6" />
+  <circle cx="80" cy="545" r="8" fill="#3b82f6" />
+  <text x="100" y="550" fill="#334155" font-size="13">Lectures &amp; Presentations</text>
+  <circle cx="280" cy="545" r="8" fill="#10b981" />
+  <text x="300" y="550" fill="#334155" font-size="13">Hands-on Labs &amp; Demos</text>
+  <circle cx="480" cy="545" r="8" fill="#6366f1" />
+  <text x="500" y="550" fill="#334155" font-size="13">Innovation &amp; Startups</text>
+  <circle cx="680" cy="545" r="8" fill="#ea580c" />
+  <text x="700" y="550" fill="#334155" font-size="13">Check-In / Reception</text>
+</svg>

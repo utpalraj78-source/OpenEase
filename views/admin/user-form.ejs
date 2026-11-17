@@ -1,0 +1,84 @@
+<%- include('../partials/header') %>
+
+<p class="crumbs"><a href="/admin/users">User Management</a> / <%= userObj ? userObj.email : 'New User' %></p>
+
+<div class="card narrow">
+  <h1><%= userObj ? 'Edit User' : 'Create User Account' %></h1>
+  <p class="muted">Manage user details, role assignment, and access status.</p>
+
+  <% if (typeof errors !== 'undefined' && errors && errors.length) { %>
+    <div class="flash flash-error">
+      <ul class="plain"><% errors.forEach(function (e) { %><li><%= e %></li><% }) %></ul>
+    </div>
+  <% } %>
+
+  <form action="<%= userObj ? '/admin/users/' + userObj._id : '/admin/users' %>" method="post" class="form">
+    <div class="grid-2">
+      <label>Full Name <span class="req">*</span>
+        <input name="fullName" value="<%= userObj ? userObj.fullName : (form.fullName || '') %>" required>
+      </label>
+      <label>Email Address <span class="req">*</span>
+        <input type="email" name="email" value="<%= userObj ? userObj.email : (form.email || '') %>" required>
+      </label>
+    </div>
+
+    <% if (!userObj) { %>
+      <div class="grid-2">
+        <label>Initial Password <span class="req">*</span>
+          <input type="password" name="password" minlength="8" required>
+          <span class="hint">Minimum 8 characters</span>
+        </label>
+        <label>Account Status
+          <select name="accountStatus">
+            <option value="ACTIVE" selected>ACTIVE</option>
+            <option value="DISABLED">DISABLED</option>
+          </select>
+        </label>
+      </div>
+    <% } else { %>
+      <label>Account Status
+        <select name="accountStatus">
+          <option value="ACTIVE" <%= userObj.accountStatus === 'ACTIVE' ? 'selected' : '' %>>ACTIVE</option>
+          <option value="DISABLED" <%= userObj.accountStatus === 'DISABLED' ? 'selected' : '' %>>DISABLED</option>
+        </select>
+      </label>
+    <% } %>
+
+    <div class="grid-2">
+      <label>Assigned Role (FR-004) <span class="req">*</span>
+        <select name="role" id="roleSelect" required>
+          <% Object.keys(roles).forEach(function (k) { %>
+            <option value="<%= roles[k] %>" <%= (userObj ? userObj.role === roles[k] : form.role === roles[k]) ? 'selected' : '' %>><%= roles[k] %></option>
+          <% }) %>
+        </select>
+      </label>
+      <label id="deptLabel">Department / Scope
+        <input name="department" value="<%= userObj ? (userObj.department || userObj.departmentScope || '') : (form.department || '') %>">
+      </label>
+    </div>
+
+    <div id="coordinatorFields" class="grid-2">
+      <label>Office / Room
+        <input name="officeRoom" value="<%= userObj ? (userObj.officeRoom || '') : (form.officeRoom || '') %>">
+      </label>
+    </div>
+
+    <div class="toolbar mt-3">
+      <button class="btn" type="submit"><%= userObj ? 'Save Changes' : 'Create Account' %></button>
+      <a href="/admin/users" class="btn btn-ghost">Cancel</a>
+    </div>
+  </form>
+
+  <% if (userObj) { %>
+    <hr class="my-4">
+    <h2 class="section-title">Reset Password</h2>
+    <form action="/admin/users/<%= userObj._id %>/reset-password" method="post" class="form">
+      <label>New Password
+        <input type="password" name="newPassword" minlength="8" placeholder="Enter new password (min 8 chars)" required>
+      </label>
+      <button class="btn btn-ghost btn-sm" type="submit">Update Password</button>
+    </form>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

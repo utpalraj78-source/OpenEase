@@ -1,0 +1,130 @@
+<%- include('../partials/header') %>
+
+<div class="page-head">
+  <div>
+    <h1 class="mb-1">User Management (UC-002)</h1>
+    <p class="muted">System accounts, roles, access permissions and audit logs.</p>
+  </div>
+  <div class="toolbar">
+    <a href="/admin/syslog" class="btn btn-ghost btn-sm">Syslog &amp; Subsystems</a>
+    <a href="/admin/users/new" class="btn btn-sm">+ Create user</a>
+  </div>
+</div>
+
+<div class="metrics">
+  <div><span><%= stats.total %></span>Total Accounts</div>
+  <div class="m-present"><span><%= stats.active %></span>Active</div>
+  <div class="m-absent"><span><%= stats.disabled %></span>Disabled</div>
+  <div><span><%= stats.byRole['COORDINATOR'] || 0 %></span>Coordinators</div>
+  <div><span><%= stats.byRole['STUDENT_PARENT'] || 0 %></span>Students / Parents</div>
+</div>
+
+<form method="get" action="/admin/users" class="filters mb-3">
+  <input type="search" name="q" value="<%= query.q || '' %>" placeholder="Search by name, email, or user ID...">
+  <select name="role">
+    <option value="">All roles</option>
+    <% Object.keys(roles).forEach(function (k) { %>
+      <option value="<%= roles[k] %>" <%= query.role === roles[k] ? 'selected' : '' %>><%= roles[k] %></option>
+    <% }) %>
+  </select>
+  <select name="status">
+    <option value="">All statuses</option>
+    <option value="ACTIVE" <%= query.status === 'ACTIVE' ? 'selected' : '' %>>Active</option>
+    <option value="DISABLED" <%= query.status === 'DISABLED' ? 'selected' : '' %>>Disabled</option>
+  </select>
+  <button class="btn btn-ghost btn-sm" type="submit">Filter</button>
+  <% if (query.q || query.role || query.status) { %>
+    <a href="/admin/users" class="btn btn-ghost btn-sm">Clear</a>
+  <% } %>
+</form>
+
+<% if (!users.length) { %>
+  <div class="empty"><p>No users found matching the filter criteria.</p></div>
+<% } else { %>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>User</th>
+        <th>Role</th>
+        <th>Department / Info</th>
+        <th>Status</th>
+        <th>Last Login</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% users.forEach(function (u) { %>
+        <tr>
+          <td><code><%= u.userId || '-' %></code></td>
+          <td>
+            <strong><%= u.fullName %></strong><br>
+            <span class="muted small"><%= u.email %></span>
+          </td>
+          <td>
+            <span class="tag tag-role"><%= u.role %></span>
+          </td>
+          <td class="small">
+            <% if (u.role === 'COORDINATOR') { %>
+              <%= u.department || '-' %> <% if (u.officeRoom) { %>(<%= u.officeRoom %>)<% } %>
+            <% } else if (u.role === 'APPROVER') { %>
+              <%= u.departmentScope || '-' %> (<%= u.administrativeRank || 'Approver' %>)
+            <% } else if (u.role === 'STUDENT_PARENT') { %>
+              <%= u.participantType %> &middot; <%= u.currentInstitution || '-' %>
+            <% } else { %>
+              <%= u.department || '-' %>
+            <% } %>
+          </td>
+          <td>
+            <% if (u.accountStatus === 'ACTIVE') { %>
+              <span class="tag tag-present">ACTIVE</span>
+            <% } else { %>
+              <span class="tag tag-absent">DISABLED</span>
+            <% } %>
+          </td>
+          <td class="small nowrap">
+            <%= u.lastLoginAt ? h.timeAgo(u.lastLoginAt) : 'Never' %>
+          </td>
+          <td class="nowrap">
+            <a href="/admin/users/<%= u._id %>/edit" class="btn btn-ghost btn-sm">Edit</a>
+            <% if (String(u._id) !== String(currentUser._id)) { %>
+              <form method="post" action="/admin/users/<%= u._id %>/toggle-status" class="inline">
+                <button class="btn btn-ghost btn-sm <%= u.accountStatus === 'ACTIVE' ? 'btn-danger' : '' %>" type="submit">
+                  <%= u.accountStatus === 'ACTIVE' ? 'Disable' : 'Enable' %>
+                </button>
+              </form>
+            <% } %>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+<% } %>
+
+<% if (recentLogs && recentLogs.length) { %>
+  <h2 class="section-title mt-4">System Audit Trail (NFR-007 / NFR-020)</h2>
+  <table class="table small">
+    <thead>
+      <tr>
+        <th>Timestamp</th>
+        <th>Actor</th>
+        <th>Action</th>
+        <th>Target</th>
+        <th>Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% recentLogs.forEach(function (log) { %>
+        <tr>
+          <td class="nowrap"><%= h.fmtDateTime(log.createdAt) %></td>
+          <td><%= log.actor ? log.actor.fullName + ' (' + log.actor.email + ')' : 'System' %></td>
+          <td><code><%= log.action %></code></td>
+          <td><%= log.target || '-' %></td>
+          <td><%= log.details || '-' %></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+<% } %>
+
+<%- include('../partials/footer') %>

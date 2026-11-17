@@ -1,0 +1,87 @@
+<%- include('../partials/header') %>
+
+<section class="page-banner" style="background-image: url('/img/hero.jpg')">
+  <div>
+    <h1 class="display">Open House Events</h1>
+    <p><%= events.length %> <%= query.show === 'past' ? 'past' : 'upcoming' %> event<%= events.length === 1 ? '' : 's' %> &middot; pick one and reserve your session</p>
+  </div>
+</section>
+
+<div class="tabbar tabbar-flat">
+  <a href="/events<%= query.show ? '?show=' + query.show : '' %>" class="<%= !query.category ? 'on' : '' %>">All</a>
+  <% categories.forEach(function (c) { %>
+    <a href="/events?category=<%= c._id %><%= query.show ? '&show=' + query.show : '' %>" class="<%= String(query.category) === String(c._id) ? 'on' : '' %>"><%= c.categoryName %></a>
+  <% }) %>
+  <span class="spacer"></span>
+  <a href="/events<%= query.category ? '?category=' + query.category : '' %>" class="<%= query.show !== 'past' ? 'on' : '' %>">Upcoming</a>
+  <a href="/events?show=past<%= query.category ? '&category=' + query.category : '' %>" class="<%= query.show === 'past' ? 'on' : '' %>">Past</a>
+</div>
+
+<form class="filters" method="get" action="/events">
+  <% if (query.show) { %><input type="hidden" name="show" value="<%= query.show %>"><% } %>
+  <input type="search" name="q" value="<%= query.q || '' %>" placeholder="Search by title, department...">
+  <select name="category">
+    <option value="">All categories</option>
+    <% categories.forEach(function (c) { %>
+      <option value="<%= c._id %>" <%= String(query.category) === String(c._id) ? 'selected' : '' %>><%= c.categoryName %></option>
+    <% }) %>
+  </select>
+  <select name="eligibility">
+    <option value="">Any eligibility</option>
+    <% Object.keys(C.ELIGIBILITY).forEach(function (k) { %>
+      <option value="<%= k %>" <%= query.eligibility === k ? 'selected' : '' %>><%= C.ELIGIBILITY[k] %></option>
+    <% }) %>
+  </select>
+  <label class="inline-label">From <input type="date" name="from" value="<%= query.from || '' %>"></label>
+  <label class="inline-label">To <input type="date" name="to" value="<%= query.to || '' %>"></label>
+  <button class="btn btn-sm" type="submit">Filter</button>
+  <% if (query.q || query.category || query.eligibility || query.from || query.to) { %>
+    <a href="/events<%= query.show ? '?show=' + query.show : '' %>" class="small">Clear</a>
+  <% } %>
+</form>
+
+<% if (!events.length) { %>
+  <div class="empty">
+    <p>No events match these filters.</p>
+  </div>
+<% } %>
+
+<div class="event-list">
+  <% events.forEach(function (e) {
+       var booked = countMap[String(e._id)] || 0;
+       var left = Math.max(0, (e.totalMaxCapacity || 0) - booked);
+       var state = e.registrationState(); %>
+    <article class="event-row">
+      <div class="date-chip">
+        <span><%= new Date(e.schedule.eventDate).getDate() %></span>
+        <small><%= h.fmtDate(e.schedule.eventDate).split(' ')[2] %></small>
+      </div>
+      <div class="event-row-body">
+        <h3><a href="/events/<%= e._id %>"><%= e.title %></a></h3>
+        <p class="meta">
+          <%= h.fmtDate(e.schedule.eventDate) %> &middot; <%= h.fmtTime(e.schedule.startTime) %> - <%= h.fmtTime(e.schedule.endTime) %>
+          &middot; <%= e.venue ? e.venue.label : 'Venue TBA' %>
+        </p>
+        <p class="meta">
+          <% if (e.category) { %><span class="tag"><%= e.category.categoryName %></span><% } %>
+          <span class="tag tag-light"><%= C.ELIGIBILITY[e.eligibilityCriteria.criteriaId] %></span>
+          <% if (e.organizer) { %><span class="muted">by <%= e.organizer %></span><% } %>
+        </p>
+      </div>
+      <div class="event-row-side">
+        <% if (mine[String(e._id)]) { %>
+          <span class="badge badge-published">Registered</span>
+        <% } else if (state === 'Registration open' && left > 0) { %>
+          <span class="seats"><%= left %> seats left</span>
+        <% } else if (state === 'Registration open') { %>
+          <span class="badge badge-cancelled">Full</span>
+        <% } else { %>
+          <span class="muted small"><%= state %></span>
+        <% } %>
+        <a href="/events/<%= e._id %>" class="btn btn-ghost btn-sm">Details</a>
+      </div>
+    </article>
+  <% }) %>
+</div>
+
+<%- include('../partials/footer') %>

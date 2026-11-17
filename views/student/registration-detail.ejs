@@ -1,0 +1,91 @@
+<%- include('../partials/header') %>
+
+<p class="crumbs"><a href="/my/registrations">My registrations</a> / <%= reg.registrationId %></p>
+
+<div class="receipt card">
+  <div class="receipt-head">
+    <div>
+      <p class="eyebrow">Booking receipt</p>
+      <h1><%= reg.event.title %></h1>
+    </div>
+    <div class="receipt-id" style="display:flex; flex-direction:column; align-items:flex-end; gap:0.5rem;">
+      <% if (typeof qrCodeUrl !== 'undefined' && qrCodeUrl) { %>
+        <img src="<%= qrCodeUrl %>" alt="Booking QR Code" style="width:110px; height:110px; border-radius:6px; border:1px solid #cbd5e1; background:#fff; padding:3px;">
+      <% } %>
+      <div>
+        <span class="lbl">Booking ID</span>
+        <strong><%= reg.registrationId %></strong>
+        <%- include('../partials/status', { status: reg.status }) %>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-3 receipt-body">
+    <div><span class="lbl">Date</span><%= h.fmtDate(reg.event.schedule.eventDate) %></div>
+    <div><span class="lbl">Session</span><%= reg.session.sessionTitle %></div>
+    <div><span class="lbl">Session time</span><%= h.fmtTime(reg.session.startTime) %> - <%= h.fmtTime(reg.session.endTime) %></div>
+    <div><span class="lbl">Session venue</span><%= reg.session.venue ? reg.session.venue.label : '-' %></div>
+    <div><span class="lbl">Report at</span><%= reg.event.venue ? reg.event.venue.label : '-' %><% if (reg.event.venue && reg.event.venue.buildingName) { %>, <%= reg.event.venue.buildingName %><% } %></div>
+    <div><span class="lbl">Attendee</span><%= reg.fullName || currentUser.fullName %><%= reg.guests ? ' (+' + reg.guests + ')' : '' %></div>
+    <div><span class="lbl">Registered on</span><%= h.fmtDateTime(reg.registrationTimestamp) %></div>
+    <div><span class="lbl">Attendance</span><%= attendance ? h.statusLabel(attendance.status) : 'Not marked yet' %></div>
+  </div>
+
+  <% if (reg.event.eligibilityCriteria && reg.event.eligibilityCriteria.description && reg.status === 'REGISTERED') { %>
+    <div class="note"><strong>Note from the organisers:</strong> <%= reg.event.eligibilityCriteria.description %></div>
+  <% } %>
+  <% if (reg.status === 'CANCELLED') { %>
+    <p class="muted">Cancelled on <%= h.fmtDateTime(reg.cancelledAt) %> - <%= reg.cancelReason %></p>
+  <% } %>
+
+  <div class="toolbar mt-2" style="display:flex; justify-content:space-between; align-items:center;">
+    <p class="small muted mb-0">Show this booking ID and QR pass at the registration desk.</p>
+    <div style="display:flex; gap:0.5rem;">
+      <a href="/my/registrations/<%= reg._id %>/calendar.ics" class="btn btn-ghost btn-sm">📅 Add to Calendar (.ics)</a>
+      <a href="#" class="btn btn-ghost btn-sm" onclick="window.print();return false;">Print receipt</a>
+    </div>
+  </div>
+</div>
+
+<% if (feedback) { %>
+  <div class="card">
+    <h2 class="section-title">Your Event Feedback</h2>
+    <p><strong>Rating:</strong> ★ <%= feedback.rating %> / 5</p>
+    <% if (feedback.comments) { %><p><strong>Comments:</strong> <%= feedback.comments %></p><% } %>
+    <span class="small muted">Submitted on <%= h.fmtDateTime(feedback.createdAt) %></span>
+  </div>
+<% } else if (reg.status === 'REGISTERED' && (reg.event.hasEnded() || (attendance && attendance.status === 'PRESENT'))) { %>
+  <div class="card">
+    <h2 class="section-title">Post-Event Feedback (UC-014)</h2>
+    <p class="muted">Thank you for attending <%= reg.event.title %>! Please share your feedback to help us improve future open house events.</p>
+    <form method="post" action="/my/registrations/<%= reg._id %>/feedback" class="form">
+      <label>Rating (1 - 5 stars) <span class="req">*</span>
+        <select name="rating" required>
+          <option value="5" selected>★★★★★ - 5 (Excellent)</option>
+          <option value="4">★★★★☆ - 4 (Very Good)</option>
+          <option value="3">★★★☆☆ - 3 (Good)</option>
+          <option value="2">★★☆☆☆ - 2 (Fair)</option>
+          <option value="1">★☆☆☆☆ - 1 (Poor)</option>
+        </select>
+      </label>
+      <label>Comments / Suggestions
+        <textarea name="comments" rows="3" placeholder="What did you like? What could be improved?"></textarea>
+      </label>
+      <button class="btn btn-sm" type="submit">Submit feedback</button>
+    </form>
+  </div>
+<% } %>
+
+<% if (reg.status === 'REGISTERED' && !reg.event.hasEnded()) { %>
+  <details class="card danger-zone">
+    <summary>Can't make it? Cancel this registration</summary>
+    <form method="post" action="/my/registrations/<%= reg._id %>/cancel" class="form" data-confirm="Cancel your registration? Your seat will be given to someone else.">
+      <label>Reason (optional)
+        <input name="reason" maxlength="200" placeholder="e.g. clash with board exam">
+      </label>
+      <button class="btn btn-danger btn-sm" type="submit">Cancel registration</button>
+    </form>
+  </details>
+<% } %>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,40 @@
+{
+  "name": "openease",
+  "version": "1.0.0",
+  "description": "OpenEase - Open House Event Management System (SE course project)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "seed": "node scripts/seed.js",
+    "smoke": "node scripts/smoke-test.js",
+    "test": "npm run test:all",
+    "test:assignment8": "node scripts/assignment8-runner.js",
+    "test:load": "node scripts/load-stress-test.js",
+    "test:security": "node scripts/security-test.js",
+    "test:uat": "node scripts/uat-acceptance-test.js",
+    "test:coverage": "c8 --reporter=text --reporter=html node scripts/assignment8-runner.js",
+    "test:all": "npm run test:assignment8 && npm run smoke && npm run test:security && npm run test:load && npm run test:uat"
+  },
+  "keywords": [
+    "open-house",
+    "event-management",
+    "express",
+    "mongodb"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@electric-sql/pglite": "^0.5.16",
+    "bcryptjs": "^2.4.3",
+    "connect-pg-simple": "^10.0.0",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.21.1",
+    "express-session": "^1.18.1",
+    "pg": "^8.23.1",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "c8": "^12.0.0"
+  }
+}
