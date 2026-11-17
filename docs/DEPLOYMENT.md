@@ -10,33 +10,39 @@ OpenEase supports **Hybrid PostgreSQL Persistence**:
 - **Zero-Config Embedded Mode (Default)**: Uses in-process WebAssembly PostgreSQL (`@electric-sql/pglite`) writing to disk in `./data/pglite`. No separate database server required.
 - **Production External PostgreSQL Pool**: Automatically activates when `DATABASE_URL` or standard PostgreSQL environment variables are configured.
 
-### Option A: Free Cloud PostgreSQL (Supabase / Neon / Render)
+### Deploy to Render (Blueprint - 1-Click Automated)
+1. Go to [Render Dashboard](https://dashboard.render.com).
+2. Click **New + -> Blueprint**.
+3. Connect your repository (`https://github.com/utpalraj78-source/OpenEase`).
+4. Render reads `render.yaml`, automatically provisions the **Web Service** and **Free Managed PostgreSQL**, injects `DATABASE_URL` and `SESSION_SECRET`, runs the seed script, and deploys live!
+
+### Alternative: Deploy to Render Manually
+1. In [Render Dashboard](https://dashboard.render.com), click **New + -> Web Service**.
+2. Connect your repository (`utpalraj78-source/OpenEase`) and configure:
+   - **Root Directory**: `.` (leave default / repo root)
+   - **Runtime**: `Node`
+   - **Build Command**: `npm install && npm run seed`
+   - **Start Command**: `npm start`
+3. Under **Environment Variables**, add:
+   - `DATABASE_URL`: *(Your cloud PostgreSQL URL, or leave blank to use embedded PGlite)*
+   - `SESSION_SECRET`: *(A random 64-char string, e.g. `openssl rand -hex 32`)*
+   - `PORT`: `3000`
+   - `NODE_ENV`: `production`
+4. Click **Deploy Web Service**.
+
+### Deploy to Railway
+1. Go to [railway.app](https://railway.app) and create a new project.
+2. Click **New -> Database -> Add PostgreSQL**.
+3. Click **New -> GitHub Repo** and select `utpalraj78-source/OpenEase`.
+4. Railway will automatically link `DATABASE_URL` from the PostgreSQL service to OpenEase and deploy via the [Procfile](file:///c:/Users/Utpal/Downloads/openease%20(1)/openease/Procfile).
+
+### Option B: Free Cloud PostgreSQL (Supabase / Neon)
 1. Create a free PostgreSQL database at [supabase.com](https://supabase.com) or [neon.tech](https://neon.tech).
 2. Copy your connection string:
    ```env
    DATABASE_URL=postgres://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres
    ```
-
-### Deploy to Render
-1. Push this repository to GitHub or GitLab.
-2. In [Render Dashboard](https://dashboard.render.com), click **New + -> Web Service**.
-3. Connect your repository and configure:
-   - **Root Directory**: `openease`
-   - **Runtime**: `Node`
-   - **Build Command**: `npm install && npm run seed`
-   - **Start Command**: `npm start`
-4. Under **Environment Variables**, add:
-   - `DATABASE_URL`: *(Your cloud PostgreSQL URL, or leave blank to use embedded PGlite)*
-   - `SESSION_SECRET`: *(A random 64-char string, e.g. `openssl rand -hex 32`)*
-   - `PORT`: `3000`
-   - `NODE_ENV`: `production`
-5. Click **Deploy Web Service**.
-
-### Deploy to Railway
-1. Go to [railway.app](https://railway.app) and create a new project.
-2. Click **New -> Database -> Add PostgreSQL**.
-3. Click **New -> GitHub Repo** and select OpenEase.
-4. Railway will automatically link `DATABASE_URL` from the PostgreSQL service to OpenEase and deploy via the [Procfile](file:///c:/Users/Utpal/Downloads/openease%20(1)/openease/Procfile).
+3. Set `DATABASE_URL` on Render, Railway, or VPS.
 
 ---
 
@@ -46,7 +52,6 @@ OpenEase includes a production [Dockerfile](file:///c:/Users/Utpal/Downloads/ope
 
 ### Start Containers:
 ```bash
-cd openease
 docker-compose up -d --build
 ```
 
@@ -78,8 +83,8 @@ sudo npm install -g pm2
 
 ### Step 2: Clone & Configure OpenEase
 ```bash
-git clone <repository_url> /var/www/openease
-cd /var/www/openease/openease
+git clone https://github.com/utpalraj78-source/OpenEase.git /var/www/openease
+cd /var/www/openease
 npm install --omit=dev
 cp .env.example .env
 
